@@ -23,24 +23,34 @@ Features:
 
 Use **New Day Reset** to clear the checklist. If every task was completed before the reset, the streak increases by one day.
 
-### TCF Practice Tracker
+### TCF Master Tracker
 
-`comprehension-tracker-v1.html` tracks practice questions for the TCF comprehension sections.
+`comprehension.html` is the recommended TCF tracker. It tracks repeated practice across 40 reading exercises and 40 listening exercises.
 
 Features:
 
 - Separate reading (CE) and listening (CO) sections
-- Question-level completion tracking
-- Progress statistics for each section
-- Automatic light or dark appearance based on the device theme
+- Configurable 3, 5, or 10 attempts per exercise
+- Exercise and overall completion tracking
+- Search exercises by number
+- Hide completed exercises
+- Reset individual exercise rows
+- Manual light and dark modes
+- JSON backup and restore
+- Confetti when all attempts for an exercise are complete
 - Progress saved locally in the browser
+
+### TCF Practice Tracker (v1)
+
+`comprehension-v1.html` is the original, simpler TCF tracker. It provides separate CE and CO sections, question-level completion tracking, progress statistics, and automatic device-based theming.
 
 ## Getting Started
 
 1. Download or clone this repository.
-2. Open either HTML file in a modern browser:
+2. Open the tracker you want in a modern browser:
    - `daily-tracker.html`
-   - `comprehension-tracker-v1.html`
+   - `comprehension.html` (recommended for TCF practice)
+   - `comprehension-v1.html`
 3. Start marking tasks or practice questions as complete.
 
 No installation is necessary.
@@ -50,7 +60,8 @@ No installation is necessary.
 ```text
 french-tracker/
 ├── daily-tracker.html
-├── comprehension-tracker-v1.html
+├── comprehension.html
+├── comprehension-v1.html
 └── README.md
 ```
 
@@ -62,6 +73,8 @@ The trackers store progress in the browser's `localStorage`. This means:
 - Data is specific to the browser and device being used.
 - Clearing browser site data will remove saved progress.
 - No study data is sent to a server.
+
+The main TCF tracker can export its progress to a `tcf_backup.json` file. Use **Restore** to import that file later or move progress to another browser or device.
 
 The pages load the Canvas Confetti library from a CDN, so confetti effects require an internet connection. Core tracking features continue to work without it once the page is available locally.
 
