@@ -6,11 +6,9 @@
     <title>TCF Master Tracker</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        /* Theme Variables */
         :root {
             --primary: #3b82f6;
             --success: #22c55e;
-            /* Light Mode Colors */
             --bg: #f8fafc;
             --card: #ffffff;
             --text: #1e293b;
@@ -37,8 +35,6 @@
         .container { width: 100%; max-width: 800px; margin: 0 auto; }
 
         header { padding: 20px 0; text-align: center; position: relative; }
-        
-        /* Theme Toggle Button */
         .theme-btn {
             position: absolute; top: 10px; right: 0;
             background: var(--card); border: 1px solid var(--border);
@@ -49,17 +45,14 @@
         .progress-bar { background: var(--primary); height: 100%; width: 0%; transition: width 0.3s; }
         .stats { display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 20px; }
 
-        /* Configuration Controls */
         .config-row {
             display: flex; justify-content: space-between; align-items: center;
             margin-bottom: 15px; background: var(--card); padding: 10px;
-            border-radius: 8px; border: 1px solid var(--border);
+            border-radius: 8px; border: 1px solid var(--border); font-size: 0.9rem;
         }
         select { background: var(--bg); color: var(--text); border: 1px solid var(--border); padding: 5px; border-radius: 4px; }
 
-        .controls {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;
-        }
+        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         input[type="text"] {
             background: var(--card); border: 1px solid var(--border);
             color: var(--text); padding: 10px; border-radius: 8px; width: 100%;
@@ -68,36 +61,63 @@
             background: var(--card); border: 1px solid var(--border);
             color: var(--text); padding: 10px; border-radius: 8px; cursor: pointer; font-size: 0.8rem;
         }
-        .btn:active { background: var(--border); }
 
         .tabs { display: flex; gap: 5px; margin-bottom: 15px; }
-        .tab { flex: 1; padding: 12px; border: 1px solid var(--border); background: var(--card); color: var(--text); cursor: pointer; border-radius: 8px; }
-        .tab.active { background: var(--primary); border-color: var(--primary); font-weight: bold; color: white; }
+        .tab { flex: 1; padding: 12px; border: 1px solid var(--border); background: var(--card); color: var(--text); cursor: pointer; border-radius: 8px; font-weight: bold; }
+        .tab.active { background: var(--primary); border-color: var(--primary); color: white; }
 
-        /* Dynamic Grid Layout */
+        /* SCROLL LOGIC */
+        .scroll-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            -webkit-overflow-scrolling: touch;
+        }
+
         .grid-layout {
             display: grid;
-            /* Column 1: Label (60px), Middle: Attempts (flexible), Last: Delete (40px) */
-            grid-template-columns: 60px repeat(var(--cols, 10), 1fr) 40px;
-            gap: 5px; align-items: center; text-align: center;
+            grid-template-columns: 60px repeat(var(--cols, 10), minmax(40px, 1fr)) 45px;
+            min-width: fit-content; /* Forces width to accommodate all columns */
+            align-items: center;
+            text-align: center;
         }
 
         .grid-header {
-            padding: 10px; background: var(--card); border-radius: 8px;
-            font-size: 0.6rem; font-weight: bold; margin-bottom: 5px;
-            position: sticky; top: 0; z-index: 10; border: 1px solid var(--border);
+            font-size: 0.7rem;
+            font-weight: bold;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 20;
         }
 
         .exercise-row {
-            padding: 8px 10px; background: var(--card);
-            margin-bottom: 4px; border-radius: 8px; border: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s;
         }
-        .exercise-row.done { border-color: var(--success); opacity: 0.7; }
 
-        .ex-label { font-weight: bold; font-size: 0.8rem; }
-        input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer; }
+        .exercise-row.done { background: rgba(34, 197, 94, 0.05); }
 
-        .reset-row-btn { font-size: 14px; opacity: 0.3; cursor: pointer; background: none; border: none; color: var(--text); }
+        /* STICKY COLUMN LOGIC */
+        .sticky-col {
+            position: sticky;
+            left: 0;
+            background: var(--card);
+            z-index: 10;
+            font-weight: bold;
+            padding: 12px 5px;
+            border-right: 1px solid var(--border);
+        }
+        
+        .grid-header .sticky-col { background: var(--bg); }
+        .exercise-row.done .sticky-col { background: inherit; color: var(--success); }
+
+        input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--primary); cursor: pointer; }
+
+        .reset-row-btn { font-size: 16px; opacity: 0.3; cursor: pointer; background: none; border: none; color: var(--text); }
         .reset-row-btn:hover { opacity: 1; color: #ef4444; }
 
         .backup-zone { margin-top: 30px; padding: 20px; border-top: 1px solid var(--border); display: flex; gap: 10px; }
@@ -108,16 +128,16 @@
 <div class="container">
     <header>
         <button class="theme-btn" onclick="toggleTheme()">🌓</button>
-        <h1>TCF Practice Tracker</h1>
+        <h1>TCF Tracker</h1>
         <div class="progress-container"><div id="main-progress" class="progress-bar"></div></div>
         <div class="stats">
             <span id="stat-text">0/0 Completed</span>
-            <span>Goal: 40/40 Reps</span>
+            <span>Goal: 10 Reps</span>
         </div>
     </header>
 
     <div class="config-row">
-        <span>Attempts per Exercise:</span>
+        <span>Attempts per Series:</span>
         <select id="attemptSelector" onchange="changeAttempts(this.value)">
             <option value="3">3 Attempts</option>
             <option value="5">5 Attempts</option>
@@ -126,20 +146,20 @@
     </div>
 
     <div class="controls">
-        <input type="text" id="searchInput" placeholder="Search Ex (e.g. 12)" oninput="render()">
+        <input type="text" id="searchInput" placeholder="Search #..." oninput="render()">
         <button class="btn" id="hideDoneBtn" onclick="toggleHideDone()">Show All</button>
     </div>
 
     <div class="tabs">
-        <button class="tab active" id="tabCE" onclick="setSection('CE')">CE (Reading)</button>
-        <button class="tab" id="tabCO" onclick="setSection('CO')">CO (Listening)</button>
+        <button class="tab active" id="tabCE" onclick="setSection('CE')">Reading (CE)</button>
+        <button class="tab" id="tabCO" onclick="setSection('CO')">Listening (CO)</button>
     </div>
 
-    <div id="grid-header" class="grid-header grid-layout">
-        <!-- Generated by JS -->
+    <!-- WRAPPER FOR SCROLLING -->
+    <div class="scroll-wrapper">
+        <div id="grid-header" class="grid-header grid-layout"></div>
+        <div id="exercise-list"></div>
     </div>
-
-    <div id="exercise-list"></div>
 
     <div class="backup-zone">
         <button class="btn" onclick="exportData()">📥 Backup</button>
@@ -154,13 +174,10 @@
     let attemptsCount = parseInt(localStorage.getItem('tcf_attempts')) || 10;
     let data = JSON.parse(localStorage.getItem('tcf_pro_data')) || {};
 
-    // Theme Toggle
     function toggleTheme() {
         document.body.classList.toggle('dark-mode');
         localStorage.setItem('tcf_theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
     }
-
-    // Set Initial Theme
     if (localStorage.getItem('tcf_theme') === 'light') document.body.classList.remove('dark-mode');
 
     function changeAttempts(val) {
@@ -186,11 +203,9 @@
         const key = `${ex}_${att}`;
         data[key] = !data[key];
         localStorage.setItem('tcf_pro_data', JSON.stringify(data));
-        
         if (isRowDone(ex) && data[key]) {
-            confetti({ particleCount: 40, spread: 50, origin: { y: 0.9 } });
+            confetti({ particleCount: 30, spread: 50, origin: { y: 0.9 } });
         }
-        
         updateProgress();
         render();
     }
@@ -211,15 +226,12 @@
     }
 
     function render() {
-        // Update Attempt Selector UI
         document.getElementById('attemptSelector').value = attemptsCount;
-        
-        // Update Grid Columns CSS
         document.documentElement.style.setProperty('--cols', attemptsCount);
 
         // Render Header
         const header = document.getElementById('grid-header');
-        let headerHtml = `<div>Ex.</div>`;
+        let headerHtml = `<div class="sticky-col">Ex.</div>`;
         for(let i=1; i<=attemptsCount; i++) headerHtml += `<div>${i}</div>`;
         headerHtml += `<div>🗑️</div>`;
         header.innerHTML = headerHtml;
@@ -232,19 +244,18 @@
         for (let i = 1; i <= 40; i++) {
             const exId = `${section}${i}`;
             const done = isRowDone(exId);
-
             if (hideDone && done) continue;
             if (search && !i.toString().includes(search)) continue;
 
             const row = document.createElement('div');
             row.className = `exercise-row grid-layout ${done ? 'done' : ''}`;
             
-            let html = `<div class="ex-label">${exId}</div>`;
+            let html = `<div class="sticky-col">${exId}</div>`;
             for (let a = 1; a <= attemptsCount; a++) {
                 const checked = data[`${exId}_${a}`] ? 'checked' : '';
-                html += `<input type="checkbox" ${checked} onchange="toggleBox('${exId}', ${a})">`;
+                html += `<div><input type="checkbox" ${checked} onchange="toggleBox('${exId}', ${a})"></div>`;
             }
-            html += `<button class="reset-row-btn" onclick="resetRow('${exId}')">✕</button>`;
+            html += `<div><button class="reset-row-btn" onclick="resetRow('${exId}')">✕</button></div>`;
             
             row.innerHTML = html;
             list.appendChild(row);
@@ -258,10 +269,9 @@
             const attNum = parseInt(key.split('_')[1]);
             return data[key] && attNum <= attemptsCount;
         }).length;
-
         const percent = totalPossible > 0 ? Math.round((currentCount / totalPossible) * 100) : 0;
         document.getElementById('main-progress').style.width = percent + '%';
-        document.getElementById('stat-text').innerText = `${currentCount}/${totalPossible} Completed (${percent}%)`;
+        document.getElementById('stat-text').innerText = `${currentCount}/${totalPossible} (${percent}%)`;
     }
 
     function exportData() {
