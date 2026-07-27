@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TCF Practice Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+            --border: #e2e8f0;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #0f172a;
+                --card: #1e293b;
+                --text: #f1f5f9;
+                --border: #334155;
+            }
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container { width: 100%; max-width: 900px; }
+
+        header { text-align: center; margin-bottom: 30px; }
+        h1 { margin: 0; font-size: 1.5rem; color: var(--primary); }
+        p { opacity: 0.7; font-size: 0.9rem; margin-top: 10px; }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .stat-card {
+            background: var(--card);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+        .stat-val { display: block; font-size: 1.2rem; font-weight: bold; color: var(--primary); }
+        .stat-label { font-size: 0.8rem; opacity: 0.6; }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: var(--border);
+            padding: 5px;
+            border-radius: 10px;
+        }
+        .tab {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: none;
+            color: var(--text);
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .tab.active { background: var(--card); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
+        /* Table Styling */
+        .table-container {
+            background: var(--card);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow-x: auto;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            min-width: 600px;
+        }
+
+        th {
+            background: var(--bg);
+            padding: 12px 8px;
+            text-align: center;
+            border-bottom: 2px solid var(--border);
+            position: sticky;
+            top: 0;
+        }
+
+        td {
+            padding: 8px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .row-label {
+            font-weight: bold;
+            background: var(--bg);
+            position: sticky;
+            left: 0;
+            border-right: 2px solid var(--border);
+        }
+
+        /* Checkbox styling */
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        tr:hover { background: rgba(37, 99, 235, 0.05); }
+        .full-complete { background: rgba(34, 197, 94, 0.1) !important; }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>TCF Practice Tracker</h1>
+        <p>Goal: Repeat each exercise 10 times before July.</p>
+    </header>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span class="stat-val" id="ce-total">0/400</span>
+            <span class="stat-label">CE Completion</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-val" id="co-total">0/400</span>
+            <span class="stat-label">CO Completion</span>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab('CE')">CE Section (Reading)</button>
+        <button class="tab" onclick="switchTab('CO')">CO Section (Listening)</button>
+    </div>
+
+    <div class="table-container">
+        <table id="tracker-table">
+            <thead>
+                <tr>
+                    <th style="min-width: 60px;">Ex.</th>
+                    <th>A1</th><th>A2</th><th>A3</th><th>A4</th><th>A5</th>
+                    <th>A6</th><th>A7</th><th>A8</th><th>A9</th><th>A10</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                <!-- JS generated rows -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let currentSection = 'CE';
+    const totalExercises = 40;
+    const attemptsPerEx = 10;
+
+    function switchTab(section) {
+        currentSection = section;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        event.target.classList.add('active');
+        renderTable();
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('table-body');
+        const savedData = JSON.parse(localStorage.getItem('tcf_data')) || {};
+        tbody.innerHTML = '';
+
+        for (let i = 1; i <= totalExercises; i++) {
+            const exId = `${currentSection}${i}`;
+            const row = document.createElement('tr');
+            
+            let rowHtml = `<td class="row-label">${exId}</td>`;
+            let completedInRow = 0;
+
+            for (let a = 1; a <= attemptsPerEx; a++) {
+                const key = `${exId}_att${a}`;
+                const checked = savedData[key] ? 'checked' : '';
+                if (savedData[key]) completedInRow++;
+                rowHtml += `<td><input type="checkbox" ${checked} onchange="toggle('${key}')"></td>`;
+            }
+
+            if (completedInRow === 10) row.classList.add('full-complete');
+            row.innerHTML = rowHtml;
+            tbody.appendChild(row);
+        }
+        updateStats();
+    }
+
+    function toggle(key) {
+        const savedData = JSON.parse(localStorage.getItem('tcf_data')) || {};
+        savedData[key] = !savedData[key];
+        localStorage.setItem('tcf_data', JSON.stringify(savedData));
+        
+        // Haptic feedback
+        if (window.navigator.vibrate) window.navigator.vibrate(5);
+        
+        updateStats();
+        
+        // Refresh row color if 10/10 reached
+        const exId = key.split('_')[0];
+        renderTable(); 
+    }
+
+    function updateStats() {
+        const savedData = JSON.parse(localStorage.getItem('tcf_data')) || {};
+        let ceCount = 0;
+        let coCount = 0;
+
+        Object.keys(savedData).forEach(key => {
+            if (savedData[key]) {
+                if (key.startsWith('CE')) ceCount++;
+                if (key.startsWith('CO')) coCount++;
+            }
+        });
+
+        document.getElementById('ce-total').innerText = `${ceCount}/400`;
+        document.getElementById('co-total').innerText = `${coCount}/400`;
+
+        if (ceCount + coCount === 800) {
+            confetti({ particleCount: 200, spread: 70, origin: { y: 0.6 } });
+        }
+    }
+
+    // Initialize
+    renderTable();
+</script>
+
+</body>
+</html>
